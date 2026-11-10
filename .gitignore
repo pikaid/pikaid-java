@@ -1,0 +1,10 @@
+target/
+.DS_Store
+.idea/
+*.iml
+.vscode/
+
+# Local-only workspace: generated reports, logs, and reference copies.
+# Never tracked (root rule below) and excluded from published archives by the
+# Maven packaging configuration and the CI artifact-hygiene check.
+/.ai/

@@ -1,0 +1,7 @@
+# Keep text files byte-identical in every checkout so pinned digests and
+# conformance tests see the same bytes on Linux, macOS, and Windows.
+* text=auto eol=lf
+
+# Windows batch scripts are expected to use CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
