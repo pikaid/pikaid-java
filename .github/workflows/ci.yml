@@ -178,11 +178,16 @@ jobs:
         run: |
           set -euo pipefail
           repo="$PWD"
+          package_version="$(./mvnw --batch-mode --no-transfer-progress -q help:evaluate -Dexpression=project.version -DforceStdout)"
+          [[ "$package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::Invalid Java package version: $package_version"
+            exit 1
+          }
           work="$(mktemp -d)"
           trap 'rm -rf "$work"' EXIT
-          main_jar="target/pikaid-1.0.0.jar"
-          sources_jar="target/pikaid-1.0.0-sources.jar"
-          javadoc_jar="target/pikaid-1.0.0-javadoc.jar"
+          main_jar="target/pikaid-${package_version}.jar"
+          sources_jar="target/pikaid-${package_version}-sources.jar"
+          javadoc_jar="target/pikaid-${package_version}-javadoc.jar"
           for artifact in "$main_jar" "$sources_jar" "$javadoc_jar" LICENSE; do
             if [ ! -s "$artifact" ]; then
               echo "::error::missing or empty: $artifact"
@@ -238,7 +243,7 @@ jobs:
             META-INF/maven/dev.pikaid/pikaid/pom.properties)
           tr -d '\r' < "$work/main/META-INF/MANIFEST.MF" > "$work/manifest.txt"
           grep -Fqx 'Automatic-Module-Name: dev.pikaid' "$work/manifest.txt"
-          for property in 'groupId=dev.pikaid' 'artifactId=pikaid' 'version=1.0.0'; do
+          for property in 'groupId=dev.pikaid' 'artifactId=pikaid' "version=${package_version}"; do
             tr -d '\r' < "$work/main/META-INF/maven/dev.pikaid/pikaid/pom.properties" \
               | grep -Fqx "$property"
           done
@@ -279,6 +284,8 @@ jobs:
           consumer="$(mktemp -d)"
           trap 'rm -rf "$consumer"' EXIT
           mkdir -p "$consumer/src/main/java/consumer"
+          package_version="$(./mvnw --batch-mode --no-transfer-progress -q help:evaluate -Dexpression=project.version -DforceStdout)"
+          [[ "$package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
           cat > "$consumer/pom.xml" <<'POM'
           <?xml version="1.0" encoding="UTF-8"?>
           <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -296,7 +303,7 @@ jobs:
               <dependency>
                 <groupId>dev.pikaid</groupId>
                 <artifactId>pikaid</artifactId>
-                <version>1.0.0</version>
+                <version>PIKAID_TESTED_VERSION</version>
               </dependency>
             </dependencies>
             <build>
@@ -310,6 +317,7 @@ jobs:
             </build>
           </project>
           POM
+          sed -i "s/PIKAID_TESTED_VERSION/$package_version/g" "$consumer/pom.xml"
           cat > "$consumer/src/main/java/consumer/ConsumerMain.java" <<'JAVA'
           package consumer;
 
