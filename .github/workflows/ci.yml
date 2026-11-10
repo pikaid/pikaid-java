@@ -141,7 +141,9 @@ jobs:
         run: |
           set -euo pipefail
           grep -qx '/.ai/' .gitignore
-          git check-ignore -q .ai
+          # Verify the explicit root directory rule against a nested path even
+          # when checkout contains no local .ai directory.
+          git check-ignore -q --no-index .ai/reports/probe.md
           if git check-ignore -q .github/workflows/ci.yml; then
             echo "::error::.gitignore must not hide repository configuration files"
             exit 1
