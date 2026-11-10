@@ -1,47 +1,61 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/pikaid/pikaid-specs/v1.0.4/logo.png" alt="pikaid" width="300" />
+  <a href="https://github.com/pikaid/pikaid-specs">
+    <img src="https://raw.githubusercontent.com/pikaid/pikaid-specs/v1.0.4/logo.png" alt="pikaid" width="300">
+  </a>
 </p>
 
 <p align="center">
   <strong>Small · Sortable · Secure ID generator</strong>
 </p>
 
-# pikaid — Official Java Implementation
+<div align="center">
 
-Official Java implementation of [pikaid](https://github.com/pikaid), a compact,
-chronologically sortable identifier for databases, APIs, and distributed
-systems.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/language-Java-ED8B00.svg)](https://github.com/pikaid/pikaid-java)
+[![CI](https://github.com/pikaid/pikaid-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pikaid/pikaid-java/actions/workflows/ci.yml)
+[![Official implementation](https://img.shields.io/badge/official-implementation-2e7d32.svg)](https://github.com/pikaid/pikaid-specs)
+[![Specification 1.0.4](https://img.shields.io/badge/spec-1.0.4-4b56a6.svg)](https://github.com/pikaid/pikaid-specs/tree/v1.0.4)
 
-A pikaid is exactly **26 lowercase ASCII Base36 characters**:
+</div>
 
-```text
-0s44we8 002loz3po6mcf6vsn23
-└──┬───┘ └────────┬────────┘
-   │              └── 19 characters, 96 bits of cryptographic randomness
-   └── 7 characters, unsigned Unix timestamp in whole seconds
-```
+**pikaid** is the **official Java implementation** of a compact, chronologically sortable, collision-resistant identifier format for databases, APIs, and distributed systems.
 
-The equivalent binary representation is exactly **17 bytes**: a five-byte
-unsigned big-endian timestamp followed by the twelve randomness bytes unchanged.
+This is the immutable, unversioned [pikaid format](https://github.com/pikaid/pikaid-specs/tree/v1.0.4), documented in specification revision **1.0.4**.
 
-The identifier format is **immutable and unversioned**. Specification revision
-**1.0.4** is normative:
-[`pikaid/pikaid-specs` at `v1.0.4`](https://github.com/pikaid/pikaid-specs/tree/v1.0.4).
+## ✨ Why pikaid?
 
-**Status: v1.0.0 — release prepared, not yet published.** The
-`dev.pikaid:pikaid:1.0.0` coordinate becomes usable once Maven Central
-publication completes. Until then, build and install the artifact locally from
-this repository. Publication is blocked on Maven Central namespace verification
-and maintainer signing credentials; see [Release status](#release-status).
+- **Short:** Compact, readable IDs for URLs, logs, and API resources.
+- **Sortable:** Lexicographically ordered by timestamp, with **one-second precision**.
+- **Collision-resistant:** 96 bits of cryptographic randomness make collisions extremely unlikely, never impossible.
+- **Storage-friendly:** Use `BINARY(17)` or readable `CHAR(26)`.
+- **Distributed-friendly:** No central sequence generator or coordination required.
 
-## Requirements
+## 🧬 Identifier format
+
+A pikaid contains **26 lowercase Base36 characters**: a **7-character Unix-seconds timestamp** followed by **19 characters encoding 96 bits of cryptographic randomness**. Its binary form is **17 bytes**: 5 unsigned big-endian timestamp bytes followed by 12 randomness bytes.
+
+![Identifier structure](https://raw.githubusercontent.com/pikaid/pikaid-specs/v1.0.4/structure.svg)
+
+> **Ordering:** Different seconds sort chronologically. Within the same second, randomness—not issuance order—decides the order.
+
+> **Security:** These are identifiers, **not secrets**, session credentials, authentication tokens, or API keys.
+
+## ⚙️ Requirements
 
 - Java 17 or newer. The library is compiled with `--release 17` and has no
   runtime dependencies outside the JDK.
 - Maven 3.9 or newer when building from source. The included Maven Wrapper
   (`./mvnw`) downloads a compatible Maven version.
 
-## Installation
+## 📦 Installation
+
+From this public source repository, compile the library before using it locally:
+
+```sh
+git clone https://github.com/pikaid/pikaid-java.git
+cd pikaid-java
+./mvnw -q -DskipTests package
+```
 
 ```xml
 <dependency>
@@ -55,31 +69,68 @@ and maintainer signing credentials; see [Release status](#release-status).
 implementation("dev.pikaid:pikaid:1.0.0")
 ```
 
-Until publication completes, install the artifact into your local Maven
-repository:
+To install the built artifact into your local Maven repository:
 
 ```bash
 ./mvnw install
 ```
 
-## Quick start
+## 🚀 Basic Usage
+
+Save this complete example as `Main.java` in the repository root and run `javac -cp target/classes Main.java && java -cp target/classes:. Main`:
 
 ```java
 import dev.pikaid.Pikaid;
 
-Pikaid id = Pikaid.generate();
-
-String text = id.toString();            // 26 lowercase Base36 characters
-byte[] binary = id.toBinary();          // exactly 17 bytes
-long timestamp = id.timestamp();        // unsigned Unix seconds
-String randomness = id.randomnessHex(); // 24 lowercase hexadecimal characters
-
-Pikaid fromText = Pikaid.parse(text);
-Pikaid fromBinary = Pikaid.fromBinary(binary);
-
-assert fromText.equals(id);
-assert fromBinary.equals(id);
+public class Main {
+    public static void main(String[] args) {
+        Pikaid id = Pikaid.generate();
+        
+        String text = id.toString();            // 26 lowercase Base36 characters
+        byte[] binary = id.toBinary();          // exactly 17 bytes
+        long timestamp = id.timestamp();        // unsigned Unix seconds
+        String randomness = id.randomnessHex(); // 24 lowercase hexadecimal characters
+        
+        Pikaid fromText = Pikaid.parse(text);
+        Pikaid fromBinary = Pikaid.fromBinary(binary);
+        
+        assert fromText.equals(id);
+        assert fromBinary.equals(id);
+        System.out.println(text);
+    }
+}
 ```
+
+## 💡 Example Use Case
+
+Use pikaid to identify **users, orders, invoices, uploads, events, and API resources**. Independent services can generate compact IDs without a shared counter, while timestamp-based ordering helps with indexing, sorting, and logs.
+
+## 📚 Canonical specification
+
+- [Canonical specification](https://github.com/pikaid/pikaid-specs)
+- [Revision 1.0.4](https://github.com/pikaid/pikaid-specs/tree/v1.0.4)
+
+Specification revisions describe the format; they do not change the encoded identifiers.
+
+## 🧩 API Reference
+
+| Method | Purpose |
+| ------ | ------- |
+| `Pikaid.generate()` | Generate with the current UTC second and a CSPRNG. |
+| `Pikaid.generate(long timestamp)` | Generate with an explicit timestamp and a CSPRNG. |
+| `Pikaid.generateBinary()` | Generate and return the 17-byte binary form. |
+| `Pikaid.of(long timestamp, byte[] randomness)` | Deterministic factory for fixtures and raw-field pipelines. |
+| `Pikaid.parse(String value)` | Strictly parse 26-character text. |
+| `Pikaid.fromBinary(byte[] value)` | Strictly decode exactly 17 bytes. |
+| `Pikaid.isValid(String value)` | Full semantic validation, returning `false` on failure. |
+| `Pikaid.isWellFormed(String value)` | Shape-only length/alphabet check. |
+| `timestamp()` / `timestampInstant()` | Timestamp as unsigned seconds or a UTC `Instant`. |
+| `randomness()` / `randomnessHex()` | Defensive copy of the twelve bytes or lowercase hex. |
+| `toBinary()` | New 17-byte binary representation. |
+| `toString()` | Canonical 26-character text. |
+| `compareTo(Pikaid other)` | Timestamp, then unsigned suffix order. |
+
+All public types and members are documented in the generated Javadoc.
 
 ### Explicit timestamp and deterministic construction
 
@@ -135,27 +186,7 @@ byte[] binary = generator.generateBinary();
 environments. Random-source failures propagate; generation fails closed and
 never falls back to a weaker source.
 
-## Public API
-
-| Method | Purpose |
-| ------ | ------- |
-| `Pikaid.generate()` | Generate with the current UTC second and a CSPRNG. |
-| `Pikaid.generate(long timestamp)` | Generate with an explicit timestamp and a CSPRNG. |
-| `Pikaid.generateBinary()` | Generate and return the 17-byte binary form. |
-| `Pikaid.of(long timestamp, byte[] randomness)` | Deterministic factory for fixtures and raw-field pipelines. |
-| `Pikaid.parse(String value)` | Strictly parse 26-character text. |
-| `Pikaid.fromBinary(byte[] value)` | Strictly decode exactly 17 bytes. |
-| `Pikaid.isValid(String value)` | Full semantic validation, returning `false` on failure. |
-| `Pikaid.isWellFormed(String value)` | Shape-only length/alphabet check. |
-| `timestamp()` / `timestampInstant()` | Timestamp as unsigned seconds or a UTC `Instant`. |
-| `randomness()` / `randomnessHex()` | Defensive copy of the twelve bytes or lowercase hex. |
-| `toBinary()` | New 17-byte binary representation. |
-| `toString()` | Canonical 26-character text. |
-| `compareTo(Pikaid other)` | Timestamp, then unsigned suffix order. |
-
-All public types and members are documented in the generated Javadoc.
-
-## Ordering, storage, and security
+## 🔄 Order Guarantee
 
 - **Ordering guarantee:** for two identifiers with different timestamps, the
   earlier timestamp sorts first in both text and binary forms under
@@ -178,7 +209,23 @@ The approximate collision probability for `n` identifiers in one timestamp
 bucket is `1 - exp(-n(n-1) / (2 * 2^96))`; the 50% threshold is about
 `3.31 * 10^14` identifiers in the same second.
 
-## Building and testing
+## 🛢 Storage Recommendations
+
+| Representation | Size | Recommended for |
+| --- | ---: | --- |
+| **BINARY(17)** | 17 bytes | Compact primary keys and indexes |
+| **CHAR(26)** | 26 characters | Readable SQL, debugging, URLs, and logs |
+
+Use an **ASCII bytewise/binary collation** for text columns (for example, `ascii_bin` on MariaDB/MySQL). Case-insensitive or locale-aware sorting is not a substitute for canonical bytewise comparison.
+
+## ✅ Verification and release status
+
+The [CI workflow](https://github.com/pikaid/pikaid-java/actions/workflows/ci.yml) runs native tests, pinned automated conformance checks, and language-specific quality gates. To run the native checks locally from a checkout: `./mvnw verify`.
+
+**Automated passing tests are not a security certification.** The independent CSPRNG source and failure-path audits (`P-GENERATE-RNG-SOURCE` and `P-GENERATE-RNG-FAILURE`) still require separate human evidence.
+
+<details>
+<summary>Platform, tooling, and conformance details</summary>
 
 The supported build runtimes are JDK 17 and JDK 21. The project targets Java 17
 bytecode and is verified on both toolchains.
@@ -246,42 +293,35 @@ certification, and the suite's two manual randomness-source audits
 (`P-GENERATE-RNG-SOURCE` and `P-GENERATE-RNG-FAILURE`) remain outstanding and
 are reported as such rather than claimed as passed.
 
-## Release status
+</details>
 
-Version `1.0.0` is prepared but **not published**. The source tree, POM
-metadata, reproducible packaging, and a `release` Maven profile are ready; the
-following prerequisites are still missing and are therefore documented, not
-assumed:
+Registry publication is not implied by a green CI: use the installation method documented above.
 
-1. **Maven Central namespace ownership.** The `dev.pikaid` groupId must be
-   verified with Maven Central, which requires proof of control (a DNS TXT
-   record for the domain or a verified GitHub namespace) before the first
-   deployment. That verification has not been completed for this repository.
-2. **Signing credentials.** The `release` profile activates
-   `maven-gpg-plugin` for artifact signing, but no maintainer GPG key is
-   configured in this environment, so signed artifacts cannot be produced here.
-3. **Repository visibility and approvals.** The GitHub repository is currently
-   private. A public Central release and its SCM links assume a publicly
-   readable source repository.
+## 🤝 Contributing
 
-Until those are resolved, no tag, signature, or Central deployment is created.
-Once available, the release is built with:
+Contributions are always welcome! 💙
 
-```bash
-./mvnw -Prelease -Dgpg.keyname=<key-id> deploy
-```
+Whether you're fixing a typo, improving documentation, adding tests, or making pikaid even better, every contribution is appreciated.
 
-The `release` profile signs the artifacts and stages them through the Central
-Publishing plugin with `autoPublish=false`, so publication requires a separate,
-explicit approval step. `./mvnw verify` alone never publishes anything.
+**Want to help? Here's how:**
 
-## Repository workspace
+- 🐛 **Found a bug?** [Open an issue](https://github.com/pikaid/pikaid-java/issues) with clear reproduction steps.
+- 💡 **Have an idea?** Start with an issue before making major changes.
+- 🛠️ **Ready to contribute?** Open a pull request explaining your changes.
+- 🧪 **Keep it tested.** Add meaningful regression tests for behavior changes and follow the existing conventions.
+- ✅ **Make sure CI passes.** All required checks must be green before a pull request is merged. No shortcuts!
 
-`.ai/` is a local-only workspace for generated reports, logs, and reference
-copies. It is ignored by the root `/.ai/` rule and excluded from the library,
-sources, and Javadoc jars and from source archives, so it is never committed or
-published.
+**One important rule:** pikaid's identifier format is immutable. Contributions must preserve the [canonical specification (revision 1.0.4)](https://github.com/pikaid/pikaid-specs/tree/v1.0.4).
 
-## License
+🔐 **Found a security vulnerability?** Report it privately using GitHub's security reporting (when available), or [contact the maintainer](mailto:larananas.dev@proton.me)—not through a public issue.
 
-MIT. See [LICENSE](LICENSE).
+**Every improvement matters, big or small. Thanks for helping make pikaid better!** 🐇
+
+## 📄 License
+
+The implementation is available under the [MIT License](LICENSE).
+
+## ✉️ Contact
+
+For licensing or project-related questions: [larananas.dev@proton.me](mailto:larananas.dev@proton.me).
+
